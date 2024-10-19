@@ -7,14 +7,12 @@ import (
 
 // Config содержит поля конфигурации.
 type Config struct {
-	Address  string   `json:"address"`   // Адрес запуска сервера
 	LogLevel LogLevel `json:"log_level"` // Уровень логирования
 	AppUrl   string   `json:"app_url"`   // Путь до сервера goph-keeper
 }
 
 func NewConfig() *Config {
 	return &Config{
-		Address:  ":8080",
 		LogLevel: "info",
 		AppUrl:   "app_url",
 	}

@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+type GophKeepet struct {
+	jwt string
+}
+
 func Start(pwdCmd *cobra.Command, fileCmd *cobra.Command) {
 	var rootCmd = &cobra.Command{Use: "app"}
 
