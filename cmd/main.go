@@ -2,14 +2,16 @@ package main
 
 import (
 	"client-goph-keeper/internal/app"
-	"client-goph-keeper/internal/modules/file"
-	"client-goph-keeper/internal/modules/pwd"
+	"log"
 )
 
 func main() {
-	//Командная оболочка для паролей
-	pwdCmd := pwd.Init()
-	//Командная оболочка для файлов
-	fileCmd := file.Init()
-	app.Start(pwdCmd, fileCmd)
+	// Инициализация базы данных
+	db, err := app.InitDB()
+	if err != nil {
+		log.Fatalf("Ошибка при подключении к базе данных: %v", err)
+	}
+	defer db.Close()
+
+	//app.Start(pwdCmd, fileCmd)
 }
