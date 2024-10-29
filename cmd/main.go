@@ -1,7 +1,7 @@
 package main
 
 import (
-	"client-goph-keeper/internal/app"
+	"client-goph-keerper/internal/app"
 	"log"
 )
 
