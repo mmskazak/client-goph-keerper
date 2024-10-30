@@ -1,4 +1,4 @@
-package pwd
+package card
 
 import (
 	"client-goph-keerper/internal/modules/pwd/commands"

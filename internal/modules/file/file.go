@@ -1,7 +1,7 @@
 package file
 
 import (
-	"client-goph-keeper/internal/modules/file/commands"
+	"client-goph-keerper/internal/modules/file/commands"
 	"github.com/spf13/cobra"
 )
 

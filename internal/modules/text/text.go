@@ -1,4 +1,4 @@
-package pwd
+package text
 
 import (
 	"client-goph-keerper/internal/modules/pwd/commands"

@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"client-goph-keeper/internal/modules/auth/commands"
+	"client-goph-keerper/internal/modules/auth/commands"
 	"github.com/spf13/cobra"
 )
 
