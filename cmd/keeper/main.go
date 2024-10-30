@@ -2,9 +2,7 @@ package main
 
 import (
 	"bufio"
-	"client-goph-keerper/internal/modules/auth"
-	"client-goph-keerper/internal/modules/file"
-	"client-goph-keerper/internal/modules/pwd"
+	"client-goph-keerper/internal/config"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+var cfg *config.Config // глобальная переменная для конфигурации
 
 // Инициализация корневой команды
 var rootCmd = &cobra.Command{
@@ -21,16 +21,22 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
-	// Добавляем команды к корневой команде
-	rootCmd.AddCommand(auth.InitAuthCmd())
-	rootCmd.AddCommand(pwd.InitPwdCmd())
-	rootCmd.AddCommand(file.InitFileCmd())
+	// Создаем новую конфигурацию и добавляем флаги
+	cfg = config.NewConfig()
+	rootCmd.PersistentFlags().StringVar(&cfg.AppUrl, "app-url", cfg.AppUrl, "URL сервера goph-keeper")
+	rootCmd.PersistentFlags().StringVar((*string)(&cfg.LogLevel), "log-level", string(cfg.LogLevel), "Уровень логирования (info, debug, error)")
 
-	interactiveMode()
+	// Выводим обновленные значения после выполнения команды
+	fmt.Println("App URL:", cfg.AppUrl)
+	fmt.Println("Log Level:", cfg.LogLevel)
+
+	// Если аргументов нет, запускаем интерактивный режим
+	interactiveMode(cfg)
+
 }
 
 // Функция для работы в интерактивном режиме
-func interactiveMode() {
+func interactiveMode(cfg *config.Config) {
 	fmt.Println("CLI Server запущен. Введите команду или 'exit' для выхода.")
 	reader := bufio.NewReader(os.Stdin)
 

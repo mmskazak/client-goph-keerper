@@ -8,10 +8,11 @@ import (
 	"net/http"
 )
 
-var saveCardCmd = &cobra.Command{
-	Use:   "save",
-	Short: "Save a card entry",
+var updateCardCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update a card entry",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		cardID, _ := cmd.Flags().GetString("card_id")
 		title, _ := cmd.Flags().GetString("title")
 		description, _ := cmd.Flags().GetString("description")
 		number, _ := cmd.Flags().GetString("number")
@@ -20,6 +21,7 @@ var saveCardCmd = &cobra.Command{
 		expire, _ := cmd.Flags().GetString("expire")
 
 		data := map[string]string{
+			"card_id":     cardID,
 			"title":       title,
 			"description": description,
 			"number":      number,
@@ -33,7 +35,7 @@ var saveCardCmd = &cobra.Command{
 			return fmt.Errorf("ошибка кодирования JSON: %v", err)
 		}
 
-		req, err := http.NewRequest("POST", "http://localhost:8080/card/save", bytes.NewBuffer(body))
+		req, err := http.NewRequest("POST", "http://localhost:8080/card/update", bytes.NewBuffer(body))
 		if err != nil {
 			return err
 		}
@@ -54,18 +56,20 @@ var saveCardCmd = &cobra.Command{
 	},
 }
 
-func InitSaveCardCmd() *cobra.Command {
-	saveCardCmd.Flags().String("title", "", "Title of the card entry")
-	saveCardCmd.Flags().String("description", "", "Description of the card entry")
-	saveCardCmd.Flags().String("number", "", "Card number")
-	saveCardCmd.Flags().String("pincode", "", "PIN code")
-	saveCardCmd.Flags().String("cvv", "", "CVV")
-	saveCardCmd.Flags().String("expire", "", "Expiration date")
-	saveCardCmd.MarkFlagRequired("title")
-	saveCardCmd.MarkFlagRequired("description")
-	saveCardCmd.MarkFlagRequired("number")
-	saveCardCmd.MarkFlagRequired("pincode")
-	saveCardCmd.MarkFlagRequired("cvv")
-	saveCardCmd.MarkFlagRequired("expire")
-	return saveCardCmd
+func InitUpdateCardCmd() *cobra.Command {
+	updateCardCmd.Flags().String("card_id", "", "Card ID to update")
+	updateCardCmd.Flags().String("title", "", "New title for the card entry")
+	updateCardCmd.Flags().String("description", "", "New description for the card entry")
+	updateCardCmd.Flags().String("number", "", "New card number")
+	updateCardCmd.Flags().String("pincode", "", "New PIN code")
+	updateCardCmd.Flags().String("cvv", "", "New CVV")
+	updateCardCmd.Flags().String("expire", "", "New expiration date")
+	updateCardCmd.MarkFlagRequired("card_id")
+	updateCardCmd.MarkFlagRequired("title")
+	updateCardCmd.MarkFlagRequired("description")
+	updateCardCmd.MarkFlagRequired("number")
+	updateCardCmd.MarkFlagRequired("pincode")
+	updateCardCmd.MarkFlagRequired("cvv")
+	updateCardCmd.MarkFlagRequired("expire")
+	return updateCardCmd
 }

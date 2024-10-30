@@ -1,7 +1,7 @@
 package card
 
 import (
-	"client-goph-keerper/internal/modules/pwd/commands"
+	"client-goph-keerper/internal/modules/card/commands"
 	"github.com/spf13/cobra"
 )
 
@@ -11,10 +11,24 @@ var pwdCmd = &cobra.Command{
 	Short: "Manage passwords",
 }
 
-func InitPwdCmd() *cobra.Command {
-	savePwdCmd := commands.InitSavePwdCmd()
-	getPwdCmd := commands.InitGetPwdCmd()
-	pwdCmd.AddCommand(savePwdCmd)
-	pwdCmd.AddCommand(getPwdCmd)
-	return pwdCmd
+// InitCardCommands инициализирует все команды управления картами
+func InitCardCommands() *cobra.Command {
+	cardCmd := &cobra.Command{
+		Use:   "card",
+		Short: "Card management commands",
+	}
+
+	saveCardCmd := commands.InitSaveCardCmd()
+	deleteCardCmd := commands.InitDeleteCardCmd()
+	getCardCmd := commands.InitGetCardCmd()
+	updateCardCmd := commands.InitUpdateCardCmd()
+	allCardCmd := commands.InitAllCardCmd()
+
+	cardCmd.AddCommand(saveCardCmd)
+	cardCmd.AddCommand(deleteCardCmd)
+	cardCmd.AddCommand(getCardCmd)
+	cardCmd.AddCommand(updateCardCmd)
+	cardCmd.AddCommand(allCardCmd)
+
+	return cardCmd
 }

@@ -5,18 +5,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// AuthCmd Команда для управления файлами (file)
-var AuthCmd = &cobra.Command{
+var authCmd = &cobra.Command{
 	Use:   "auth",
-	Short: "Manage auth",
+	Short: "User authentication commands",
 }
 
 func InitAuthCmd() *cobra.Command {
-	registrationAuthCmd := commands.InitRegistrationCmdFlags()
-	loginAuthCmd := commands.InitLoginCmdFlags()
-	logoutAuthCmd := commands.InitLogoutCmdFlags()
-	AuthCmd.AddCommand(registrationAuthCmd)
-	AuthCmd.AddCommand(loginAuthCmd)
-	AuthCmd.AddCommand(logoutAuthCmd)
-	return AuthCmd
+	registerCmd := commands.InitRegisterCmd()
+	loginCmd := commands.InitLoginCmd()
+	logoutCmd := commands.InitLogoutCmd()
+
+	authCmd.AddCommand(registerCmd)
+	authCmd.AddCommand(loginCmd)
+	authCmd.AddCommand(logoutCmd)
+
+	return authCmd
 }

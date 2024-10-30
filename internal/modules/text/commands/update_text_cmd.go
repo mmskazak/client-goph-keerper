@@ -8,15 +8,17 @@ import (
 	"net/http"
 )
 
-var saveTextCmd = &cobra.Command{
-	Use:   "save",
-	Short: "Save a text entry",
+var updateTextCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update a text entry",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		textID, _ := cmd.Flags().GetString("text_id")
 		title, _ := cmd.Flags().GetString("title")
 		description, _ := cmd.Flags().GetString("description")
 		textContent, _ := cmd.Flags().GetString("text_content")
 
 		data := map[string]string{
+			"text_id":      textID,
 			"title":        title,
 			"description":  description,
 			"text_content": textContent,
@@ -27,7 +29,7 @@ var saveTextCmd = &cobra.Command{
 			return fmt.Errorf("ошибка кодирования JSON: %v", err)
 		}
 
-		req, err := http.NewRequest("POST", "http://localhost:8080/text/save", bytes.NewBuffer(body))
+		req, err := http.NewRequest("POST", "http://localhost:8080/text/update", bytes.NewBuffer(body))
 		if err != nil {
 			return err
 		}
@@ -48,12 +50,14 @@ var saveTextCmd = &cobra.Command{
 	},
 }
 
-func InitSaveTextCmd() *cobra.Command {
-	saveTextCmd.Flags().String("title", "", "Title of the text entry")
-	saveTextCmd.Flags().String("description", "", "Description of the text entry")
-	saveTextCmd.Flags().String("text_content", "", "Content of the text entry")
-	saveTextCmd.MarkFlagRequired("title")
-	saveTextCmd.MarkFlagRequired("description")
-	saveTextCmd.MarkFlagRequired("text_content")
-	return saveTextCmd
+func InitUpdateTextCmd() *cobra.Command {
+	updateTextCmd.Flags().String("text_id", "", "Text ID to update")
+	updateTextCmd.Flags().String("title", "", "New title for the text entry")
+	updateTextCmd.Flags().String("description", "", "New description for the text entry")
+	updateTextCmd.Flags().String("text_content", "", "New content of the text entry")
+	updateTextCmd.MarkFlagRequired("text_id")
+	updateTextCmd.MarkFlagRequired("title")
+	updateTextCmd.MarkFlagRequired("description")
+	updateTextCmd.MarkFlagRequired("text_content")
+	return updateTextCmd
 }

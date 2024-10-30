@@ -8,10 +8,11 @@ import (
 	"net/http"
 )
 
-var savePwdCmd = &cobra.Command{
-	Use:   "save",
-	Short: "Save a password",
+var updatePwdCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update a password by ID",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		pwdID, _ := cmd.Flags().GetString("pwd_id")
 		title, _ := cmd.Flags().GetString("title")
 		description, _ := cmd.Flags().GetString("description")
 		login, _ := cmd.Flags().GetString("login")
@@ -19,6 +20,7 @@ var savePwdCmd = &cobra.Command{
 		token, _ := cmd.Flags().GetString("token")
 
 		data := map[string]interface{}{
+			"pwd_id":      pwdID,
 			"title":       title,
 			"description": description,
 			"credentials": map[string]string{
@@ -32,7 +34,7 @@ var savePwdCmd = &cobra.Command{
 			return fmt.Errorf("ошибка кодирования JSON: %v", err)
 		}
 
-		req, err := http.NewRequest("POST", "http://localhost:8080/pwd/save", bytes.NewBuffer(body))
+		req, err := http.NewRequest("POST", "http://localhost:8080/pwd/update", bytes.NewBuffer(body))
 		if err != nil {
 			return err
 		}
@@ -52,15 +54,17 @@ var savePwdCmd = &cobra.Command{
 	},
 }
 
-func InitSavePwdCmd() *cobra.Command {
-	savePwdCmd.Flags().String("title", "", "Title for the password entry")
-	savePwdCmd.Flags().String("description", "", "Description for the password entry")
-	savePwdCmd.Flags().String("login", "", "Login for the password entry")
-	savePwdCmd.Flags().String("password", "", "Password for the password entry")
-	savePwdCmd.Flags().String("token", "", "Bearer token for authentication")
-	savePwdCmd.MarkFlagRequired("title")
-	savePwdCmd.MarkFlagRequired("login")
-	savePwdCmd.MarkFlagRequired("password")
-	savePwdCmd.MarkFlagRequired("token")
-	return savePwdCmd
+func InitUpdatePwdCmd() *cobra.Command {
+	updatePwdCmd.Flags().String("pwd_id", "", "Password entry ID")
+	updatePwdCmd.Flags().String("title", "", "Title for the password entry")
+	updatePwdCmd.Flags().String("description", "", "Description for the password entry")
+	updatePwdCmd.Flags().String("login", "", "Login for the password entry")
+	updatePwdCmd.Flags().String("password", "", "Password for the password entry")
+	updatePwdCmd.Flags().String("token", "", "Bearer token for authentication")
+	updatePwdCmd.MarkFlagRequired("pwd_id")
+	updatePwdCmd.MarkFlagRequired("title")
+	updatePwdCmd.MarkFlagRequired("login")
+	updatePwdCmd.MarkFlagRequired("password")
+	updatePwdCmd.MarkFlagRequired("token")
+	return updatePwdCmd
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Команда для управления паролями (pwd)
 var pwdCmd = &cobra.Command{
 	Use:   "pwd",
 	Short: "Manage passwords",
@@ -13,8 +12,12 @@ var pwdCmd = &cobra.Command{
 
 func InitPwdCmd() *cobra.Command {
 	savePwdCmd := commands.InitSavePwdCmd()
+	deletePwdCmd := commands.InitDeletePwdCmd()
 	getPwdCmd := commands.InitGetPwdCmd()
+
 	pwdCmd.AddCommand(savePwdCmd)
+	pwdCmd.AddCommand(deletePwdCmd)
 	pwdCmd.AddCommand(getPwdCmd)
+
 	return pwdCmd
 }
