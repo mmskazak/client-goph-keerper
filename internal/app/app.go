@@ -3,7 +3,9 @@ package app
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/glebarez/sqlite"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 )
 
@@ -23,4 +25,21 @@ func Start(pwdCmd *cobra.Command, fileCmd *cobra.Command) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func InitDB() (*sql.DB, error) {
+	// Открываем базу данных SQLite (если файла нет, он будет создан)
+	db, err := sql.Open("sqlite", "./gophkeeper.db")
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("sqlite db created")
+
+	// Проверяем подключение
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+	log.Printf("sqlite db opened")
+
+	return db, nil
 }
