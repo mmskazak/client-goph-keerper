@@ -6,8 +6,8 @@ import (
 )
 
 var syncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Commands for syncing",
+	Use:   "update",
+	Short: "Update data from server",
 }
 
 func InitSyncCmd() *cobra.Command {
