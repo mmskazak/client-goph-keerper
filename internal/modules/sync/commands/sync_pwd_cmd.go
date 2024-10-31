@@ -11,12 +11,16 @@ import (
 	"net/http"
 )
 
-// Структура для хранения информации о пароле
+type Credentials struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
 type PasswordEntry struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Login       string `json:"login"`
-	Password    string `json:"password"`
+	ID          string      `json:"id"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Credentials Credentials `json:"credentials"`
 }
 
 // Команда для получения всех паролей
@@ -37,7 +41,7 @@ var allPwdCmd = &cobra.Command{
 		}
 
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", token)
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -51,6 +55,8 @@ var allPwdCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ошибка чтения ответа: %v", err)
 		}
+		fmt.Println("Тело ответа")
+		fmt.Println(string(responseData))
 
 		// Парсим JSON-ответ
 		var entries []PasswordEntry
@@ -80,7 +86,8 @@ func savePasswordsToDB(entries []PasswordEntry) error {
 	// Вставляем каждый пароль в таблицу
 	insertQuery := `INSERT INTO passwords (title, description, login, password) VALUES (?, ?, ?, ?)`
 	for _, entry := range entries {
-		if _, err := db.Exec(insertQuery, entry.Title, entry.Description, entry.Login, entry.Password); err != nil {
+		if _, err := db.Exec(insertQuery, entry.Title,
+			entry.Description, entry.Credentials.Login, entry.Credentials.Password); err != nil {
 			return fmt.Errorf("ошибка вставки пароля в базу данных: %v", err)
 		}
 	}
