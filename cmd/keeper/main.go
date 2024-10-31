@@ -6,6 +6,7 @@ import (
 	"client-goph-keerper/internal/modules/card"
 	"client-goph-keerper/internal/modules/file"
 	"client-goph-keerper/internal/modules/pwd"
+	"client-goph-keerper/internal/modules/sync"
 	"client-goph-keerper/internal/modules/text"
 	"database/sql"
 	"github.com/spf13/cobra"
@@ -29,7 +30,7 @@ func main() {
 	textCmd := text.InitTextCmd()
 	cardCmd := card.InitCardCmd()
 	fileCmd := file.InitFileCmd()
-	//syncCmd := sync.InitSyncCmd()
+	syncCmd := sync.InitSyncCmd()
 	authCmd := auth.InitAuthCmd()
 
 	var rootCmd = &cobra.Command{Use: "app"}
@@ -39,7 +40,7 @@ func main() {
 	rootCmd.AddCommand(textCmd)
 	rootCmd.AddCommand(cardCmd)
 	rootCmd.AddCommand(fileCmd)
-	//rootCmd.AddCommand(syncCmd)
+	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(authCmd)
 
 	app.Start(rootCmd)

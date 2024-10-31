@@ -56,11 +56,10 @@ func InitDB() (*sql.DB, error) {
 
 	CREATE TABLE IF NOT EXISTS passwords (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER,
 		title TEXT,
 		description TEXT,
-		credentials JSON,
-		FOREIGN KEY(user_id) REFERENCES users(id)
+		login TEXT,
+		password TEXT
 	);
 
 	CREATE TABLE IF NOT EXISTS texts (
