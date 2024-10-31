@@ -12,13 +12,10 @@ var deletePwdCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a password by ID",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		userID, _ := cmd.Flags().GetInt("user_id")
 		pwdID, _ := cmd.Flags().GetString("pwd_id")
-		token, _ := cmd.Flags().GetString("token")
 
 		data := map[string]interface{}{
-			"user_id": userID,
-			"pwd_id":  pwdID,
+			"pwd_id": pwdID,
 		}
 
 		body, err := json.Marshal(data)
@@ -31,8 +28,14 @@ var deletePwdCmd = &cobra.Command{
 			return err
 		}
 
+		// Получаем токен из базы данных
+		token, err := getTokenFromDB()
+		if err != nil {
+			return fmt.Errorf("ошибка при получении токена: %v", err)
+		}
+
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", token)
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -47,11 +50,7 @@ var deletePwdCmd = &cobra.Command{
 }
 
 func InitDeletePwdCmd() *cobra.Command {
-	deletePwdCmd.Flags().Int("user_id", 0, "User ID")
 	deletePwdCmd.Flags().String("pwd_id", "", "Password entry ID")
-	deletePwdCmd.Flags().String("token", "", "Bearer token for authentication")
-	deletePwdCmd.MarkFlagRequired("user_id")
 	deletePwdCmd.MarkFlagRequired("pwd_id")
-	deletePwdCmd.MarkFlagRequired("token")
 	return deletePwdCmd
 }

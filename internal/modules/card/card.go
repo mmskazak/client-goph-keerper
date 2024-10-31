@@ -11,8 +11,8 @@ var pwdCmd = &cobra.Command{
 	Short: "Manage passwords",
 }
 
-// InitCardCommands инициализирует все команды управления картами
-func InitCardCommands() *cobra.Command {
+// InitCardCmd инициализирует все команды управления картами
+func InitCardCmd() *cobra.Command {
 	cardCmd := &cobra.Command{
 		Use:   "card",
 		Short: "Card management commands",

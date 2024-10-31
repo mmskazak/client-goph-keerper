@@ -2,6 +2,8 @@ package commands
 
 import (
 	"bytes"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"io"
@@ -17,7 +19,6 @@ var saveFileCmd = &cobra.Command{
 		title, _ := cmd.Flags().GetString("title")
 		description, _ := cmd.Flags().GetString("description")
 		filePath, _ := cmd.Flags().GetString("file")
-		token, _ := cmd.Flags().GetString("token")
 
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
@@ -50,9 +51,14 @@ var saveFileCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		// Получаем токен из базы данных
+		token, err := getTokenFromDB()
+		if err != nil {
+			return fmt.Errorf("ошибка при получении токена: %v", err)
+		}
 
 		req.Header.Set("Content-Type", writer.FormDataContentType())
-		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", token)
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -70,10 +76,30 @@ func InitSaveFileCmd() *cobra.Command {
 	saveFileCmd.Flags().String("title", "", "Title of the file")
 	saveFileCmd.Flags().String("description", "", "Description of the file")
 	saveFileCmd.Flags().String("file", "", "Path to the file")
-	saveFileCmd.Flags().String("token", "", "Bearer token for authentication")
 	saveFileCmd.MarkFlagRequired("title")
-	saveFileCmd.MarkFlagRequired("description")
 	saveFileCmd.MarkFlagRequired("file")
-	saveFileCmd.MarkFlagRequired("token")
 	return saveFileCmd
+}
+
+// Функция для получения токена из базы данных
+func getTokenFromDB() (string, error) {
+	// Подключаемся к базе данных
+	db, err := sql.Open("sqlite", "gophkeeper.db")
+	if err != nil {
+		return "", fmt.Errorf("ошибка подключения к базе данных: %v", err)
+	}
+	defer db.Close()
+
+	// Извлекаем токен из таблицы
+	var token string
+	query := `SELECT jwt FROM users LIMIT 1`
+	err = db.QueryRow(query).Scan(&token)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", fmt.Errorf("токен не найден в базе данных")
+		}
+		return "", fmt.Errorf("ошибка получения токена: %v", err)
+	}
+
+	return token, nil
 }

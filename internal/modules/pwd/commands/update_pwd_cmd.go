@@ -17,7 +17,6 @@ var updatePwdCmd = &cobra.Command{
 		description, _ := cmd.Flags().GetString("description")
 		login, _ := cmd.Flags().GetString("login")
 		password, _ := cmd.Flags().GetString("password")
-		token, _ := cmd.Flags().GetString("token")
 
 		data := map[string]interface{}{
 			"pwd_id":      pwdID,
@@ -39,8 +38,14 @@ var updatePwdCmd = &cobra.Command{
 			return err
 		}
 
+		// Получаем токен из базы данных
+		token, err := getTokenFromDB()
+		if err != nil {
+			return fmt.Errorf("ошибка при получении токена: %v", err)
+		}
+
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", token)
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -60,11 +65,9 @@ func InitUpdatePwdCmd() *cobra.Command {
 	updatePwdCmd.Flags().String("description", "", "Description for the password entry")
 	updatePwdCmd.Flags().String("login", "", "Login for the password entry")
 	updatePwdCmd.Flags().String("password", "", "Password for the password entry")
-	updatePwdCmd.Flags().String("token", "", "Bearer token for authentication")
 	updatePwdCmd.MarkFlagRequired("pwd_id")
 	updatePwdCmd.MarkFlagRequired("title")
 	updatePwdCmd.MarkFlagRequired("login")
 	updatePwdCmd.MarkFlagRequired("password")
-	updatePwdCmd.MarkFlagRequired("token")
 	return updatePwdCmd
 }

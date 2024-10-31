@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"io"
 	"net/http"
 )
 
@@ -11,7 +12,6 @@ var getPwdCmd = &cobra.Command{
 	Short: "Get a password by ID",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pwdID, _ := cmd.Flags().GetString("pwd_id")
-		token, _ := cmd.Flags().GetString("token")
 
 		url := fmt.Sprintf("http://localhost:8080/pwd/get/%s", pwdID)
 
@@ -20,7 +20,14 @@ var getPwdCmd = &cobra.Command{
 			return err
 		}
 
-		req.Header.Set("Authorization", "Bearer "+token)
+		// Получаем токен из базы данных
+		token, err := getTokenFromDB()
+		if err != nil {
+			return fmt.Errorf("ошибка при получении токена: %v", err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", token)
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -29,15 +36,19 @@ var getPwdCmd = &cobra.Command{
 		}
 		defer resp.Body.Close()
 
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
 		fmt.Printf("Response: %v\n", resp.Status)
+		fmt.Printf("Data: %v\n", fmt.Sprintf("%s", data))
 		return nil
 	},
 }
 
 func InitGetPwdCmd() *cobra.Command {
 	getPwdCmd.Flags().String("pwd_id", "", "Password entry ID")
-	getPwdCmd.Flags().String("token", "", "Bearer token for authentication")
 	getPwdCmd.MarkFlagRequired("pwd_id")
-	getPwdCmd.MarkFlagRequired("token")
 	return getPwdCmd
 }

@@ -14,10 +14,14 @@ func InitPwdCmd() *cobra.Command {
 	savePwdCmd := commands.InitSavePwdCmd()
 	deletePwdCmd := commands.InitDeletePwdCmd()
 	getPwdCmd := commands.InitGetPwdCmd()
+	allPwdCmd := commands.InitAllPwdCmd()
+	updPwdCmd := commands.InitUpdatePwdCmd()
 
 	pwdCmd.AddCommand(savePwdCmd)
 	pwdCmd.AddCommand(deletePwdCmd)
 	pwdCmd.AddCommand(getPwdCmd)
+	pwdCmd.AddCommand(allPwdCmd)
+	pwdCmd.AddCommand(updPwdCmd)
 
 	return pwdCmd
 }
