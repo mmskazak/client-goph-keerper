@@ -14,7 +14,7 @@ type TextEntry struct {
 	ID          string `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Text        string `json:"text"`
+	Text        string `json:"text_content"`
 }
 
 // Команда для получения всех текстов
@@ -24,7 +24,7 @@ var allTextsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("syncing texts...")
 		// Создаем запрос
-		req, err := http.NewRequest("POST", "http://localhost:8080/texts/all", nil)
+		req, err := http.NewRequest("POST", "http://localhost:8080/text/all", nil)
 		if err != nil {
 			return err
 		}
