@@ -1,54 +1,62 @@
 package commands
 
 import (
+	"client-goph-keerper/internal/storage"
 	"fmt"
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 )
 
-var getPwdCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get a password by ID",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		pwdID, _ := cmd.Flags().GetString("pwd_id")
+// SetGetPasswordCmd создает команду получения пароля по ID
+func SetGetPasswordCmd(s *storage.Storage) (*cobra.Command, error) {
+	getPwdCmd := &cobra.Command{
+		Use:   "get",
+		Short: "Get a password by ID",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Получаем значение флага
+			pwdID, _ := cmd.Flags().GetString("pwd_id")
 
-		url := fmt.Sprintf("http://localhost:8080/pwd/get/%s", pwdID)
+			// Формируем URL запроса
+			url := fmt.Sprintf("%s/pwd/get/%s", s.ServerURL, pwdID)
 
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			return err
-		}
+			// Создаем запрос
+			req, err := http.NewRequest("GET", url, nil)
+			if err != nil {
+				return fmt.Errorf("ошибка создания запроса: %v", err)
+			}
 
-		// Получаем токен из базы данных
-		token, err := getTokenFromDB()
-		if err != nil {
-			return fmt.Errorf("ошибка при получении токена: %v", err)
-		}
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", s.Token)
 
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", token)
+			// Отправляем запрос
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				return fmt.Errorf("ошибка отправки запроса: %v", err)
+			}
+			defer resp.Body.Close()
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
+			// Чтение ответа
+			data, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return fmt.Errorf("ошибка чтения ответа: %v", err)
+			}
 
-		data, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
+			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf("Data: %s\n", data)
+			return nil
+		},
+	}
 
-		fmt.Printf("Response: %v\n", resp.Status)
-		fmt.Printf("Data: %v\n", fmt.Sprintf("%s", data))
-		return nil
-	},
-}
-
-func InitGetPwdCmd() *cobra.Command {
+	// Определяем флаги
 	getPwdCmd.Flags().String("pwd_id", "", "Password entry ID")
-	getPwdCmd.MarkFlagRequired("pwd_id")
-	return getPwdCmd
+
+	// Устанавливаем обязательные флаги
+	err := getPwdCmd.MarkFlagRequired("pwd_id")
+	if err != nil {
+		return nil, fmt.Errorf("error setting required flag 'pwd_id': %v", err)
+	}
+
+	return getPwdCmd, nil
 }

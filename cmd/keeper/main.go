@@ -7,27 +7,20 @@ import (
 	"client-goph-keerper/internal/modules/file"
 	"client-goph-keerper/internal/modules/passwords"
 	"client-goph-keerper/internal/storage"
-	"database/sql"
 	"github.com/spf13/cobra"
 	"log"
 )
 
 func main() {
-	// Инициализация SQLLite
-	db, err := storage.Init()
+	// Инициализация Storage
+	s, err := storage.Init()
 	if err != nil {
-		log.Fatalf("Init db err: %v", err)
+		log.Fatalf("Error init storage struct: %v", err)
 	}
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			log.Fatalf("Close db err: %v", err)
-		}
-	}(db)
 
-	installingCmd, err := begin.StartsCmd(db)
+	installingCmd, err := begin.StartsCmd(s)
 	if err != nil {
-		log.Fatalf("install starts commands err: %v", err)
+		log.Fatalf("Error install starts commands err: %v", err)
 	}
 	pwdCmd := passwords.InitPwdCmd()
 	fileCmd := file.InitFileCmd()

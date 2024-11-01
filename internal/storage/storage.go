@@ -6,11 +6,15 @@ import (
 	"fmt"
 )
 
+// Storage структура для хранения базы данных и параметров приложения
 type Storage struct {
-	DataBase *sql.DB
+	DataBase  *sql.DB
+	Token     string
+	ServerURL string
 }
 
-func Init() (*Storage, error) {
+// connectDB открывает соединение с базой данных SQLite и возвращает его
+func connectDB() (*sql.DB, error) {
 	// Открываем базу данных SQLite (если файла нет, он будет создан)
 	db, err := sql.Open("sqlite", "./keeper.db")
 	if err != nil {
@@ -22,46 +26,80 @@ func Init() (*Storage, error) {
 		return nil, fmt.Errorf("error pinging db: %v", err)
 	}
 
-	// Создаем таблицу для хранения данных клиента
-	// в этой таблице будет храниться
-	// jwt - токен авторизованного пользователя на удаленном сервере
-	// server_url - адрес удаленного сервера с секретами
+	return db, nil
+}
+
+// runMigrations выполняет миграции для базы данных, создавая нужные таблицы и вставляя значения по умолчанию
+func runMigrations(db *sql.DB) error {
+	// Схема для таблицы параметров приложения
 	schema := `
 	CREATE TABLE IF NOT EXISTS 'app_params' (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
-		'key' TEXT,
+		'key' TEXT UNIQUE,
 		'value' TEXT
 	);
 	-- Вставка значения для ключа 'jwt', если такой записи нет
-	INSERT OR IGNORE INTO app (key, value)
+	INSERT OR IGNORE INTO app_params (key, value)
 	VALUES ('jwt', '');
 	       
 	-- Вставка значения для ключа 'server_url', если такой записи нет
-	INSERT OR IGNORE INTO app (key, value)
+	INSERT OR IGNORE INTO app_params (key, value)
 	VALUES ('server_url', '');
-`
+	`
 
-	// Выполнение SQL-запросов
-	_, err = db.Exec(schema)
+	_, err := db.Exec(schema)
+	if err != nil {
+		return fmt.Errorf("ошибка выполнения миграции: %v", err)
+	}
+
+	return nil
+}
+
+// Init инициализирует соединение с базой данных, запускает миграции и возвращает экземпляр Storage
+func Init() (*Storage, error) {
+	db, err := connectDB()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Storage{db: db}, nil
-}
-
-// GetTokenFromDB Функция для получения токена из базы данных.
-func (s *Storage) GetTokenFromDB() (string, error) {
-	// Извлекаем токен из таблицы
-	var token string
-	query := `SELECT jwt FROM users LIMIT 1`
-	err := s.db.QueryRow(query).Scan(&token)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", fmt.Errorf("токен не найден в базе данных")
-		}
-		return "", fmt.Errorf("ошибка получения токена: %v", err)
+	// Запускаем миграции
+	if err := runMigrations(db); err != nil {
+		return nil, err
 	}
 
-	return token, nil
+	s := &Storage{DataBase: db}
+	err = s.loadAppParams()
+	if err != nil {
+		return nil, fmt.Errorf("error loading app params: %v", err)
+	}
+	return s, nil
+}
+
+// LoadAppParams загружает параметры приложения из базы данных и устанавливает их в структуре Storage
+func (s *Storage) loadAppParams() error {
+	// Извлекаем токен и URL сервера из базы данных
+	var jwt, serverURL string
+	tokenQuery := `SELECT value FROM app_params WHERE key = 'jwt' LIMIT 1`
+	err := s.DataBase.QueryRow(tokenQuery).Scan(&jwt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("токен не найден в базе данных")
+		}
+		return fmt.Errorf("ошибка получения токена: %v", err)
+	}
+
+	serverURLQuery := `SELECT value FROM app_params WHERE key = 'server_url' LIMIT 1`
+	err = s.DataBase.QueryRow(serverURLQuery).Scan(&serverURL)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("адрес сервера не найден в базе данных")
+		}
+		return fmt.Errorf("ошибка получения адреса сервера: %v", err)
+	}
+
+	// Устанавливаем значения в структуре
+	s.Token = jwt
+	s.ServerURL = serverURL
+
+	return nil
 }

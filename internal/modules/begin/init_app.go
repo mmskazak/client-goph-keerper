@@ -2,7 +2,7 @@ package begin
 
 import (
 	"client-goph-keerper/internal/modules/begin/commands"
-	"database/sql"
+	"client-goph-keerper/internal/storage"
 	"fmt"
 	"github.com/spf13/cobra"
 )
@@ -12,10 +12,11 @@ var initAppCmd = &cobra.Command{
 	Short: "Params for job application",
 }
 
-func StartsCmd(db *sql.DB) (*cobra.Command, error) {
-	setServerCmd, err := commands.SetServerCommand(db)
+// StartsCmd инициализация команд - настроек клиента, для возможности начала работы.
+func StartsCmd(s *storage.Storage) (*cobra.Command, error) {
+	setServerCmd, err := commands.SetServerCommand(s)
 	if err != nil {
-		return nil, fmt.Errorf("begin set server: %w", err)
+		return nil, fmt.Errorf("error setting set server command: %w", err)
 	}
 
 	initAppCmd.AddCommand(setServerCmd)

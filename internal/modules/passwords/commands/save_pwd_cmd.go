@@ -39,19 +39,13 @@ func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			// Создаем и отправляем запрос
-			req, err := http.NewRequest("POST", "http://localhost:8080/pwd/save", bytes.NewBuffer(body))
+			req, err := http.NewRequest("POST", s.ServerURL+"/pwd/save", bytes.NewBuffer(body))
 			if err != nil {
 				return err
 			}
 
-			// Получаем токен из базы данных
-			token, err := s.GetTokenFromDB()
-			if err != nil {
-				return fmt.Errorf("ошибка при получении токена: %v", err)
-			}
-
 			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", token)
+			req.Header.Set("Authorization", s.Token)
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
