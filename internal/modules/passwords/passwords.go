@@ -1,12 +1,12 @@
-package pwd
+package passwords
 
 import (
-	"client-goph-keerper/internal/modules/pwd/commands"
+	"client-goph-keerper/internal/modules/passwords/commands"
 	"github.com/spf13/cobra"
 )
 
 var pwdCmd = &cobra.Command{
-	Use:   "pwd",
+	Use:   "passwords",
 	Short: "Manage passwords",
 }
 

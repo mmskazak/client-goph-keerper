@@ -2,8 +2,6 @@ package commands
 
 import (
 	"bytes"
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"io"
@@ -79,27 +77,4 @@ func InitSaveFileCmd() *cobra.Command {
 	saveFileCmd.MarkFlagRequired("title")
 	saveFileCmd.MarkFlagRequired("file")
 	return saveFileCmd
-}
-
-// Функция для получения токена из базы данных
-func getTokenFromDB() (string, error) {
-	// Подключаемся к базе данных
-	db, err := sql.Open("sqlite", "gophkeeper.db")
-	if err != nil {
-		return "", fmt.Errorf("ошибка подключения к базе данных: %v", err)
-	}
-	defer db.Close()
-
-	// Извлекаем токен из таблицы
-	var token string
-	query := `SELECT jwt FROM users LIMIT 1`
-	err = db.QueryRow(query).Scan(&token)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", fmt.Errorf("токен не найден в базе данных")
-		}
-		return "", fmt.Errorf("ошибка получения токена: %v", err)
-	}
-
-	return token, nil
 }
