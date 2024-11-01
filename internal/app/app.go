@@ -14,7 +14,7 @@ func Start(rootCmd *cobra.Command) {
 	}
 }
 
-func InitDB() (*sql.DB, error) {
+func InitStorage() (*sql.DB, error) {
 	// Открываем базу данных SQLite (если файла нет, он будет создан)
 	db, err := sql.Open("sqlite", "./gophkeeper.db")
 	if err != nil {
@@ -28,47 +28,10 @@ func InitDB() (*sql.DB, error) {
 
 	// SQL-запросы для создания таблиц
 	schema := `
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		jwt TEXT NOT NULL
-	);
-
-	CREATE TABLE IF NOT EXISTS files (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER,
-		title TEXT,
-		description TEXT,
-		path_to_file TEXT,
-		FOREIGN KEY(user_id) REFERENCES users(id)
-	);
-
-	CREATE TABLE IF NOT EXISTS cards (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER,
-		title TEXT,
-		description TEXT,
-		number INTEGER UNIQUE,
-		pincode INTEGER,
-		cvv INTEGER,
-		expire DATE,
-		FOREIGN KEY(user_id) REFERENCES users(id)
-	);
-
-	CREATE TABLE IF NOT EXISTS passwords (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT,
-		description TEXT,
-		login TEXT,
-		password TEXT
-	);
-
-	CREATE TABLE IF NOT EXISTS texts (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER,
-		title TEXT,
-		description TEXT,
-		text TEXT,
-		FOREIGN KEY(user_id) REFERENCES users(id)
+	CREATE TABLE IF NOT EXISTS 'app' (
+	    id INTEGER UNIQUE DEFAULT 1,
+		jwt TEXT NOT NULL,
+		server_url TEXT
 	);`
 
 	// Выполнение SQL-запросов

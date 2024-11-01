@@ -7,14 +7,12 @@ import (
 
 // Config содержит поля конфигурации.
 type Config struct {
-	LogLevel LogLevel `json:"log_level"` // Уровень логирования
-	AppUrl   string   `json:"app_url"`   // Путь до сервера goph-keeper
+	AppUrl string `json:"app_url"` // Путь до сервера goph-keeper
 }
 
 func NewConfig() *Config {
 	return &Config{
-		LogLevel: "info",
-		AppUrl:   "app_url",
+		AppUrl: "app_url",
 	}
 }
 
@@ -22,11 +20,6 @@ func NewConfig() *Config {
 func InitConfig() (*Config, error) {
 	config := NewConfig()
 	config, err := mergeFlags(config)
-	if err != nil {
-		return nil, fmt.Errorf("error merge: %w", err)
-	}
-
-	config, err = mergeEnv(config)
 	if err != nil {
 		return nil, fmt.Errorf("error merge: %w", err)
 	}
@@ -40,15 +33,5 @@ func mergeFlags(config *Config) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mergo from flags error: %v", err)
 	}
-	return config, nil
-}
-
-func mergeEnv(config *Config) (*Config, error) {
-	configFromEnv := parseEnv()
-	err := mergo.Merge(config, configFromEnv, mergo.WithOverride)
-	if err != nil {
-		return nil, fmt.Errorf("mergo from env error: %v", err)
-	}
-
 	return config, nil
 }

@@ -2,20 +2,26 @@ package main
 
 import (
 	"client-goph-keerper/internal/app"
+	"client-goph-keerper/internal/config"
 	"client-goph-keerper/internal/modules/auth"
-	"client-goph-keerper/internal/modules/card"
 	"client-goph-keerper/internal/modules/file"
 	"client-goph-keerper/internal/modules/pwd"
-	"client-goph-keerper/internal/modules/sync"
-	"client-goph-keerper/internal/modules/text"
 	"database/sql"
+	"fmt"
 	"github.com/spf13/cobra"
 	"log"
 )
 
 func main() {
-	// Инициализация базы данных
-	db, err := app.InitDB()
+	//Инициализация конфига
+	cfg, err := config.InitConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(cfg)
+
+	// Инициализация SQLLite
+	db, err := app.InitStorage()
 	if err != nil {
 		log.Fatalf("Ошибка при подключении к базе данных: %v", err)
 	}
@@ -27,20 +33,14 @@ func main() {
 	}(db)
 
 	pwdCmd := pwd.InitPwdCmd()
-	textCmd := text.InitTextCmd()
-	cardCmd := card.InitCardCmd()
 	fileCmd := file.InitFileCmd()
-	syncCmd := sync.InitSyncCmd()
 	authCmd := auth.InitAuthCmd()
 
 	var rootCmd = &cobra.Command{Use: "app"}
 
 	// Добавляем команды
 	rootCmd.AddCommand(pwdCmd)
-	rootCmd.AddCommand(textCmd)
-	rootCmd.AddCommand(cardCmd)
 	rootCmd.AddCommand(fileCmd)
-	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(authCmd)
 
 	app.Start(rootCmd)
