@@ -6,14 +6,18 @@ import (
 )
 
 var syncCmd = &cobra.Command{
-	Use:   "update",
+	Use:   "sync",
 	Short: "Update data from server",
 }
 
 func InitSyncCmd() *cobra.Command {
-	savePwdCmd := commands.InitSyncAllPwdCmd()
+	syncPwdCmd := commands.InitSyncAllPwdCmd()
+	syncCardsCmd := commands.InitSyncAllCardsCmd()
+	syncAllFiles := commands.InitSyncAllFilesCmd()
 
-	syncCmd.AddCommand(savePwdCmd)
+	syncCmd.AddCommand(syncPwdCmd)
+	syncCmd.AddCommand(syncCardsCmd)
+	syncCmd.AddCommand(syncAllFiles)
 
 	return syncCmd
 }

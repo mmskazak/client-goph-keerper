@@ -24,8 +24,8 @@ type PasswordEntry struct {
 }
 
 // Команда для получения всех паролей
-var allPwdCmd = &cobra.Command{
-	Use:   "pwd",
+var allPwdsCmd = &cobra.Command{
+	Use:   "passwords",
 	Short: "Synchronize the password",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Создаем запрос
@@ -119,5 +119,5 @@ func getTokenFromDB() (string, error) {
 }
 
 func InitSyncAllPwdCmd() *cobra.Command {
-	return allPwdCmd
+	return allPwdsCmd
 }

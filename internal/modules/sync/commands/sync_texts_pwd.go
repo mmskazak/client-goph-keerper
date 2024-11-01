@@ -18,10 +18,11 @@ type TextEntry struct {
 }
 
 // Команда для получения всех текстов
-var allTextCmd = &cobra.Command{
+var allTextsCmd = &cobra.Command{
 	Use:   "texts",
 	Short: "Synchronize the texts",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("syncing texts...")
 		// Создаем запрос
 		req, err := http.NewRequest("POST", "http://localhost:8080/texts/all", nil)
 		if err != nil {
@@ -86,4 +87,8 @@ func saveTextsToDB(entries []TextEntry) error {
 	}
 
 	return nil
+}
+
+func InitSyncAllTextsCmd() *cobra.Command {
+	return allTextsCmd
 }
