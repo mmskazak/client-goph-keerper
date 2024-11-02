@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// SetServerCommand NewSaveFileCmd Команда принимает базу данных в качестве параметра.
-func SetServerCommand(s *storage.Storage) (*cobra.Command, error) {
+// SetPathRemoteServerCommand NewSaveFileCmd Команда принимает базу данных в качестве параметра.
+func SetPathRemoteServerCommand(s *storage.Storage) (*cobra.Command, error) {
 	setServerCmd := &cobra.Command{
 		Use:   "set",
 		Short: "Set remote server url",

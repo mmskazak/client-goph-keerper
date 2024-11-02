@@ -1,38 +1,27 @@
 package commands
 
 import (
-	"database/sql"
+	"client-goph-keerper/internal/storage"
 	"fmt"
 	"github.com/spf13/cobra"
 )
 
-var logoutCmd = &cobra.Command{
-	Use:   "logout",
-	Short: "Log out the current user",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		removeTokenFromDB()
-		fmt.Println("You have logged out")
-		return nil
-	},
-}
+// LogoutCommand инициализирует команду для выхода пользователя
+func LogoutCommand(s *storage.Storage) (*cobra.Command, error) {
+	logoutCmd := &cobra.Command{
+		Use:   "logout",
+		Short: "Log out the current user",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Вызываем функцию для удаления токена из базы данных
+			err := s.RemoveTokenFromDB()
+			if err != nil {
+				return fmt.Errorf("failed to log out: %v", err)
+			}
 
-func InitLogoutCmd() *cobra.Command {
-	// Можно добавить флаг для токена, если требуется
-	return logoutCmd
-}
-
-func removeTokenFromDB() error {
-	// Подключаемся к базе данных с драйвером glebarez/sqlite
-	db, err := sql.Open("sqlite", "gophkeeper.db")
-	if err != nil {
-		return fmt.Errorf("ошибка подключения к базе данных: %v", err)
+			fmt.Println("You have logged out")
+			return nil
+		},
 	}
-	defer db.Close()
 
-	// Вставляем токен в таблицу
-	insertQuery := `DELETE FROM users WHERE 1`
-	if _, err := db.Exec(insertQuery); err != nil {
-		return fmt.Errorf("ошибка удаленния jwt токена: %v", err)
-	}
-	return nil
+	return logoutCmd, nil
 }

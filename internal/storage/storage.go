@@ -103,3 +103,13 @@ func (s *Storage) loadAppParams() error {
 
 	return nil
 }
+
+// RemoveTokenFromDB removeTokenFromDB удаляет токен из базы данных
+func (s *Storage) RemoveTokenFromDB() error {
+	// Удаляем токен из таблицы app_params
+	deleteQuery := `DELETE FROM app_params WHERE key = ?`
+	if _, err := s.DataBase.Exec(deleteQuery, "jwt_token"); err != nil {
+		return fmt.Errorf("ошибка удаления jwt токена: %v", err)
+	}
+	return nil
+}

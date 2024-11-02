@@ -1,9 +1,8 @@
 package main
 
 import (
-	"client-goph-keerper/internal/app"
 	"client-goph-keerper/internal/modules/auth"
-	"client-goph-keerper/internal/modules/begin"
+	"client-goph-keerper/internal/modules/connect_to_server"
 	"client-goph-keerper/internal/modules/file"
 	"client-goph-keerper/internal/modules/passwords"
 	"client-goph-keerper/internal/storage"
@@ -12,27 +11,46 @@ import (
 )
 
 func main() {
-	// Инициализация Storage
+	// Инициализация хранилища
 	s, err := storage.Init()
 	if err != nil {
-		log.Fatalf("Error init storage struct: %v", err)
+		log.Fatalf("Ошибка инициализации хранилища: %v", err)
 	}
 
-	installingCmd, err := begin.StartsCmd(s)
+	// Команды для первоначальной настройки
+	installingCmd, err := connect_to_server.StartsCmd(s)
 	if err != nil {
-		log.Fatalf("Error install starts commands err: %v", err)
+		log.Fatalf("Ошибка установки начальных команд: %v", err)
 	}
-	pwdCmd := passwords.InitPwdCmd()
-	fileCmd := file.InitFileCmd()
-	authCmd := auth.InitAuthCmd()
+
+	// Команды для аутентификации
+	authCmd, err := auth.InitAuthCmd(s)
+	if err != nil {
+		log.Fatalf("Ошибка инициализации команд аутентификации: %v", err)
+	}
+
+	// Команды для управления файлами
+	fileCmd, err := file.InitFileCmd(s)
+	if err != nil {
+		log.Fatalf("Ошибка инициализации команд управления файлами: %v", err)
+	}
+
+	// Команды для управления паролями
+	pwdCmd, err := passwords.InitPwdCmd(s)
+	if err != nil {
+		log.Fatalf("Ошибка инициализации команд управления паролями: %v", err)
+	}
 
 	var rootCmd = &cobra.Command{Use: "app"}
 
 	// Добавляем команды
 	rootCmd.AddCommand(installingCmd)
-	rootCmd.AddCommand(pwdCmd)
-	rootCmd.AddCommand(fileCmd)
 	rootCmd.AddCommand(authCmd)
+	rootCmd.AddCommand(fileCmd)
+	rootCmd.AddCommand(pwdCmd)
 
-	app.Start(rootCmd)
+	err = rootCmd.Execute()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
