@@ -5,28 +5,37 @@ import (
 	"client-goph-keerper/internal/storage"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+
 	_ "github.com/glebarez/sqlite" // Импорт драйвера SQLite
 	"github.com/spf13/cobra"
-	"net/http"
 )
 
-// SetSavePasswordCmd команда сохранения пароля
+// SetSavePasswordCmd команда сохранения пароля.
 func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 	savePwdCmd := &cobra.Command{
 		Use:   "save",
 		Short: "Save a password",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			// Получаем значения флагов
-			title, _ := cmd.Flags().GetString("title")
-			description, _ := cmd.Flags().GetString("description")
-			login, _ := cmd.Flags().GetString("login")
-			password, _ := cmd.Flags().GetString("password")
+			title, err := cmd.Flags().GetString("title")
+			if err != nil {
+				return fmt.Errorf("get title flag: %w", err)
+			}
+			login, err := cmd.Flags().GetString("login")
+			if err != nil {
+				return fmt.Errorf("get login flag: %w", err)
+			}
+			password, err := cmd.Flags().GetString("password")
+			if err != nil {
+				return fmt.Errorf("get password flag: %w", err)
+			}
 
 			// Формируем JSON-данные для отправки
 			data := map[string]interface{}{
-				"title":       title,
-				"description": description,
+				"title": title,
 				"credentials": map[string]string{
 					"login":    login,
 					"password": password,
@@ -35,13 +44,13 @@ func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 
 			body, err := json.Marshal(data)
 			if err != nil {
-				return fmt.Errorf("ошибка кодирования JSON: %v", err)
+				return fmt.Errorf("ошибка кодирования JSON: %w", err)
 			}
 
 			// Создаем и отправляем запрос
-			req, err := http.NewRequest("POST", s.ServerURL+"/pwd/save", bytes.NewBuffer(body))
+			req, err := http.NewRequest(http.MethodPost, s.ServerURL+"/pwd/save", bytes.NewBuffer(body))
 			if err != nil {
-				return err
+				return fmt.Errorf("error saving password: %w", err)
 			}
 
 			req.Header.Set("Content-Type", "application/json")
@@ -50,9 +59,14 @@ func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return err
+				return fmt.Errorf("error saving password: %w", err)
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					log.Printf("error saving password: %v", err)
+				}
+			}(resp.Body)
 
 			fmt.Printf("Response: %v\n", resp.Status)
 			return nil
@@ -60,7 +74,6 @@ func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 	}
 
 	savePwdCmd.Flags().String("title", "", "Title for the password entry")
-	savePwdCmd.Flags().String("description", "", "Description for the password entry")
 	savePwdCmd.Flags().String("login", "", "Login for the password entry")
 	savePwdCmd.Flags().String("password", "", "Password for the password entry")
 

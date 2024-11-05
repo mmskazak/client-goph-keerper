@@ -7,13 +7,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
-// SetGetFileCmd создает команду для получения файла по ID
+// SetGetFileCmd создает команду для получения файла по ID.
 func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 	getFileCmd := &cobra.Command{
 		Use:   "get",
@@ -21,9 +22,10 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fileID, _ := cmd.Flags().GetString("file_id")
 
-			req, err := http.NewRequest("GET", fmt.Sprintf("%s/file/get/%s", s.ServerURL, fileID), nil)
+			reqURL := path.Join(s.ServerURL, "file", "get", fileID)
+			req, err := http.NewRequest(http.MethodGet, reqURL, http.NoBody)
 			if err != nil {
-				return fmt.Errorf("ошибка создания запроса: %v", err)
+				return fmt.Errorf("ошибка создания запроса: %w", err)
 			}
 
 			// Используем токен из структуры storage
@@ -64,7 +66,7 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			outputPath := filepath.Join(".", fileName)
 			file, err := os.Create(outputPath)
 			if err != nil {
-				return fmt.Errorf("ошибка создания файла: %v", err)
+				return fmt.Errorf("ошибка создания файла: %w", err)
 			}
 			defer func(file *os.File) {
 				err := file.Close()
@@ -76,7 +78,7 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			// Копируем содержимое ответа в файл
 			_, err = io.Copy(file, resp.Body)
 			if err != nil {
-				return fmt.Errorf("ошибка записи в файл: %v", err)
+				return fmt.Errorf("ошибка записи в файл: %w", err)
 			}
 
 			fmt.Printf("Файл успешно загружен: %s\n", outputPath)

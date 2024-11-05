@@ -6,8 +6,9 @@ import (
 	"client-goph-keerper/internal/modules/file"
 	"client-goph-keerper/internal/modules/passwords"
 	"client-goph-keerper/internal/storage"
-	"github.com/spf13/cobra"
 	"log"
+
+	"github.com/spf13/cobra"
 )
 
 func main() {

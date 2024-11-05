@@ -3,17 +3,20 @@ package commands
 import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
-	"github.com/spf13/cobra"
+	"io"
+	"log"
 	"net/http"
+
+	"github.com/spf13/cobra"
 )
 
-// SetAllFilesCmd создает команду для получения списка всех файлов для пользователя
+// SetAllFilesCmd создает команду для получения списка всех файлов для пользователя.
 func SetAllFilesCmd(s *storage.Storage) (*cobra.Command, error) {
 	allFilesCmd := &cobra.Command{
 		Use:   "all",
 		Short: "List all files for a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			req, err := http.NewRequest("POST", fmt.Sprintf("%s/file/all", s.ServerURL), nil)
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/file/all", s.ServerURL), http.NoBody)
 			if err != nil {
 				return fmt.Errorf("ошибка создания запроса: %v", err)
 			}
@@ -25,7 +28,12 @@ func SetAllFilesCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("ошибка отправки запроса: %v", err)
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					log.Printf("error closing response body: %v", err)
+				}
+			}(resp.Body)
 
 			fmt.Printf("Response: %v\n", resp.Status)
 			return nil

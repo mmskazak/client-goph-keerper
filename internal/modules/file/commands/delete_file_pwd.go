@@ -1,36 +1,31 @@
 package commands
 
 import (
-	"bytes"
 	"client-goph-keerper/internal/storage"
-	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
+	"io"
+	"log"
 	"net/http"
+	"path"
+
+	"github.com/spf13/cobra"
 )
 
-// SetDeleteFileCmd создает команду для удаления файла по ID
+// SetDeleteFileCmd создает команду для удаления файла по ID.
 func SetDeleteFileCmd(s *storage.Storage) (*cobra.Command, error) {
 	deleteFileCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a file by ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fileID, _ := cmd.Flags().GetString("file_id")
-			userID, _ := cmd.Flags().GetInt("user_id")
-
-			data := map[string]interface{}{
-				"file_id": fileID,
-				"user_id": userID,
+			fileID, err := cmd.Flags().GetString("file_id")
+			if err != nil {
+				return fmt.Errorf("file id is required: %w", err)
 			}
 
-			body, err := json.Marshal(data)
+			reqURL := path.Join(s.ServerURL, "file", "delete", fileID)
+			req, err := http.NewRequest(http.MethodGet, reqURL, http.NoBody)
 			if err != nil {
-				return fmt.Errorf("ошибка кодирования JSON: %v", err)
-			}
-
-			req, err := http.NewRequest("POST", fmt.Sprintf("%s/file/delete", s.ServerURL), bytes.NewBuffer(body))
-			if err != nil {
-				return fmt.Errorf("ошибка создания запроса: %v", err)
+				return fmt.Errorf("ошибка создания запроса: %w", err)
 			}
 
 			req.Header.Set("Content-Type", "application/json")
@@ -41,7 +36,12 @@ func SetDeleteFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("ошибка отправки запроса: %v", err)
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					log.Printf("error closing response body: %v", err)
+				}
+			}(resp.Body)
 
 			fmt.Printf("Response: %v\n", resp.Status)
 			return nil
@@ -49,18 +49,9 @@ func SetDeleteFileCmd(s *storage.Storage) (*cobra.Command, error) {
 	}
 
 	deleteFileCmd.Flags().String("file_id", "", "File ID to delete")
-	deleteFileCmd.Flags().Int("user_id", 0, "User ID")
 	err := deleteFileCmd.MarkFlagRequired("file_id")
 	if err != nil {
 		return nil, fmt.Errorf("ошибка установки обязательного флага 'file_id': %v", err)
-	}
-	err = deleteFileCmd.MarkFlagRequired("user_id")
-	if err != nil {
-		return nil, fmt.Errorf("ошибка установки обязательного флага 'user_id': %v", err)
-	}
-	err = deleteFileCmd.MarkFlagRequired("token")
-	if err != nil {
-		return nil, fmt.Errorf("ошибка установки обязательного флага 'token': %v", err)
 	}
 
 	return deleteFileCmd, nil

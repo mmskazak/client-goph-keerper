@@ -5,24 +5,33 @@ import (
 	"client-goph-keerper/internal/storage"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
+	"log"
 	"net/http"
+	"path"
+
+	"github.com/spf13/cobra"
 )
 
-// RegisterCommand создаёт команду регистрации пользователя
+// RegisterCommand создаёт команду регистрации пользователя.
 func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 	registerCmd := &cobra.Command{
 		Use:   "register",
 		Short: "Register a new user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Получаем логин и пароль из флагов
-			login, _ := cmd.Flags().GetString("login")
-			password, _ := cmd.Flags().GetString("password")
+			username, err := cmd.Flags().GetString("username")
+			if err != nil {
+				return fmt.Errorf("get username: %w", err)
+			}
+			password, err := cmd.Flags().GetString("password")
+			if err != nil {
+				return fmt.Errorf("get password: %w", err)
+			}
 
 			// Создаем JSON объект для передачи на сервер
 			data := map[string]string{
-				"login":    login,
+				"username": username,
 				"password": password,
 			}
 
@@ -31,36 +40,47 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 				return fmt.Errorf("ошибка кодирования JSON: %v", err)
 			}
 
+			registrationURL := path.Join(s.ServerURL, "registration")
 			// Создаём HTTP запрос для регистрации
-			req, err := http.NewRequest("POST", "http://localhost:8080/registration", bytes.NewBuffer(body))
+			req, err := http.NewRequest("POST", registrationURL, bytes.NewBuffer(body))
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating http request: %w", err)
 			}
 			req.Header.Set("Content-Type", "application/json")
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return err
+				return fmt.Errorf("http request: %w", err)
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					log.Printf("error closing body: %v", err)
+				}
+			}(resp.Body)
 
 			// Читаем ответ от сервера
 			all, err := io.ReadAll(resp.Body)
 			if err != nil {
-				return err
+				return fmt.Errorf("error reading response body: %w", err)
 			}
-			fmt.Println(string(all))
 
 			if resp.StatusCode != http.StatusCreated {
 				fmt.Printf("Response: %v\n", resp.Status)
+				fmt.Println(string(all))
 				return nil
 			}
 
-			// Получаем токен из заголовка ответа
-			token := resp.Header.Get("Authorization")
-			if token == "" {
-				return fmt.Errorf("токен не найден в заголовке")
+			// Декодируем JSON ответ, чтобы получить JWT токен
+			var result map[string]string
+			if err := json.Unmarshal(all, &result); err != nil {
+				return fmt.Errorf("ошибка декодирования JSON ответа: %w", err)
+			}
+
+			token, ok := result["jwt"]
+			if !ok || token == "" {
+				return fmt.Errorf("токен не найден в ответе")
 			}
 
 			// Сохраняем токен в базе данных
@@ -75,15 +95,21 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 		},
 	}
 
-	registerCmd.Flags().String("login", "", "Login for the new user")
+	registerCmd.Flags().String("username", "", "Username for the new user")
 	registerCmd.Flags().String("password", "", "Password for the new user")
-	registerCmd.MarkFlagRequired("login")
-	registerCmd.MarkFlagRequired("password")
+	err := registerCmd.MarkFlagRequired("username")
+	if err != nil {
+		return nil, fmt.Errorf("mark username: %w", err)
+	}
+	err = registerCmd.MarkFlagRequired("password")
+	if err != nil {
+		return nil, fmt.Errorf("mark password: %w", err)
+	}
 
 	return registerCmd, nil
 }
 
-// saveTokenToDB сохраняет токен в базе данных, используя переданный объект *storage.Storage
+// saveTokenToDB сохраняет токен в базе данных, используя переданный объект *storage.Storage.
 func saveTokenToDB(s *storage.Storage, jwt string) error {
 	insertQuery := `INSERT INTO users (jwt) VALUES (?)`
 	if _, err := s.DataBase.Exec(insertQuery, jwt); err != nil {
@@ -94,7 +120,7 @@ func saveTokenToDB(s *storage.Storage, jwt string) error {
 	return nil
 }
 
-// checkTokenExists проверяет наличие токена в базе данных
+// checkTokenExists проверяет наличие токена в базе данных.
 func checkTokenExists(s *storage.Storage) (bool, error) {
 	query := `SELECT EXISTS(SELECT * FROM users WHERE 1)`
 	var exists bool

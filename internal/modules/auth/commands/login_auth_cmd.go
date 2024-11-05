@@ -5,19 +5,22 @@ import (
 	"client-goph-keerper/internal/storage"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
+	"log"
 	"net/http"
+	"path"
+
+	"github.com/spf13/cobra"
 )
 
-// LoginCommand инициализирует команду для входа пользователя
+// LoginCommand инициализирует команду для входа пользователя.
 func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Проверяем, есть ли уже сохраненный токен
-			isHaveToken, err := checkTokenExists()
+			isHaveToken, err := checkTokenExists(s)
 			if err != nil {
 				return fmt.Errorf("checkTokenExists: %w", err)
 			}
@@ -26,12 +29,18 @@ func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			// Получаем логин и пароль из флагов
-			login, _ := cmd.Flags().GetString("login")
-			password, _ := cmd.Flags().GetString("password")
+			username, err := cmd.Flags().GetString("username")
+			if err != nil {
+				return fmt.Errorf("cmd.Flags().GetString: %w", err)
+			}
+			password, err := cmd.Flags().GetString("password")
+			if err != nil {
+				return fmt.Errorf("cmd.Flags().GetString: %w", err)
+			}
 
 			// Формируем данные для JSON-запроса
 			data := map[string]string{
-				"login":    login,
+				"username": username,
 				"password": password,
 			}
 
@@ -41,7 +50,8 @@ func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			// Выполняем HTTP-запрос для входа
-			req, err := http.NewRequest("POST", "http://localhost:8080/login", bytes.NewBuffer(body))
+			loginURL := path.Join(s.ServerURL, "username")
+			req, err := http.NewRequest(http.MethodPost, loginURL, bytes.NewBuffer(body))
 			if err != nil {
 				return err
 			}
@@ -53,7 +63,12 @@ func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return err
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					log.Printf("error closing body: %v", err)
+				}
+			}(resp.Body)
 
 			// Читаем ответ от сервера
 			all, err := io.ReadAll(resp.Body)

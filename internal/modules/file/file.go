@@ -4,6 +4,7 @@ import (
 	"client-goph-keerper/internal/modules/file/commands"
 	"client-goph-keerper/internal/storage"
 	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +13,7 @@ var fileCmd = &cobra.Command{
 	Short: "Manage files",
 }
 
-// InitFileCmd инициализирует команды управления файлами
+// InitFileCmd инициализирует команды управления файлами.
 func InitFileCmd(s *storage.Storage) (*cobra.Command, error) {
 	saveFileCmd, err := commands.SetSaveFileCmd(s)
 	if err != nil {

@@ -3,22 +3,24 @@ package commands
 import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"net/http"
+	"path"
+
+	"github.com/spf13/cobra"
 )
 
-// SetAllPasswordsCmd создает команду для получения всех паролей пользователя
+// SetAllPasswordsCmd создает команду для получения всех паролей пользователя.
 func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 	allPwdCmd := &cobra.Command{
 		Use:   "all",
 		Short: "List all passwords for a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Формируем URL для запроса
-			url := fmt.Sprintf("%s/pwd/all", s.ServerURL)
+			url := path.Join(s.ServerURL, "pwd", "all")
 
 			// Создаем запрос
-			req, err := http.NewRequest("POST", url, nil)
+			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 			if err != nil {
 				return fmt.Errorf("ошибка создания запроса: %v", err)
 			}
@@ -31,14 +33,14 @@ func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %v", err)
+				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
 			defer resp.Body.Close()
 
 			// Чтение тела ответа
 			responseData, err := io.ReadAll(resp.Body)
 			if err != nil {
-				return fmt.Errorf("ошибка чтения ответа: %v", err)
+				return fmt.Errorf("ошибка чтения ответа: %w", err)
 			}
 
 			fmt.Printf("Status: %v\n", resp.Status)

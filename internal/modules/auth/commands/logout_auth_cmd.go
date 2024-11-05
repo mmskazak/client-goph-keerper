@@ -3,10 +3,11 @@ package commands
 import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-// LogoutCommand инициализирует команду для выхода пользователя
+// LogoutCommand инициализирует команду для выхода пользователя.
 func LogoutCommand(s *storage.Storage) (*cobra.Command, error) {
 	logoutCmd := &cobra.Command{
 		Use:   "logout",

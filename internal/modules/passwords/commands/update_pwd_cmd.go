@@ -5,28 +5,39 @@ import (
 	"client-goph-keerper/internal/storage"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"net/http"
+
+	"github.com/spf13/cobra"
 )
 
-// SetUpdatePasswordCmd создает команду обновления пароля
+// SetUpdatePasswordCmd создает команду обновления пароля.
 func SetUpdatePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 	updatePwdCmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update a password by ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Получаем значения флагов
-			pwdID, _ := cmd.Flags().GetString("pwd_id")
-			title, _ := cmd.Flags().GetString("title")
-			description, _ := cmd.Flags().GetString("description")
-			login, _ := cmd.Flags().GetString("login")
-			password, _ := cmd.Flags().GetString("password")
+			pwdID, err := cmd.Flags().GetString("pwd_id")
+			if err != nil {
+				return fmt.Errorf("error getting pwd_id from flags: %w", err)
+			}
+			title, err := cmd.Flags().GetString("title")
+			if err != nil {
+				return fmt.Errorf("error getting title from flags: %w", err)
+			}
+			login, err := cmd.Flags().GetString("login")
+			if err != nil {
+				return fmt.Errorf("error getting login from flags: %w", err)
+			}
+			password, err := cmd.Flags().GetString("password")
+			if err != nil {
+				return fmt.Errorf("error getting password from flags: %w", err)
+			}
 
 			// Формируем JSON-данные для отправки
 			data := map[string]interface{}{
-				"pwd_id":      pwdID,
-				"title":       title,
-				"description": description,
+				"pwd_id": pwdID,
+				"title":  title,
 				"credentials": map[string]string{
 					"login":    login,
 					"password": password,
@@ -39,7 +50,7 @@ func SetUpdatePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			// Создаем и отправляем запрос
-			req, err := http.NewRequest("POST", s.ServerURL+"/pwd/update", bytes.NewBuffer(body))
+			req, err := http.NewRequest(http.MethodPost, s.ServerURL+"/pwd/update", bytes.NewBuffer(body))
 			if err != nil {
 				return fmt.Errorf("ошибка создания запроса: %v", err)
 			}
@@ -61,7 +72,6 @@ func SetUpdatePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 
 	updatePwdCmd.Flags().String("pwd_id", "", "Password entry ID")
 	updatePwdCmd.Flags().String("title", "", "Title for the password entry")
-	updatePwdCmd.Flags().String("description", "", "Description for the password entry")
 	updatePwdCmd.Flags().String("login", "", "Login for the password entry")
 	updatePwdCmd.Flags().String("password", "", "Password for the password entry")
 
