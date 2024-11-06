@@ -9,8 +9,8 @@ import (
 )
 
 var initAppCmd = &cobra.Command{
-	Use:   "connect_to_server",
-	Short: "Params for job application",
+	Use:   "setServer",
+	Short: "Server for job application",
 }
 
 // StartsCmd инициализация команд - настроек клиента, для возможности начала работы.

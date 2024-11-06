@@ -41,11 +41,5 @@ func SetAllFilesCmd(s *storage.Storage) (*cobra.Command, error) {
 		},
 	}
 
-	// Установите токен как обязательный флаг
-	err := allFilesCmd.MarkFlagRequired("token")
-	if err != nil {
-		return nil, fmt.Errorf("ошибка установки обязательного флага 'token': %w", err)
-	}
-
 	return allFilesCmd, nil
 }
