@@ -46,23 +46,23 @@ func SetSaveFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			// Создаем часть формы для загружаемого файла
 			part, err := writer.CreateFormFile(File, fileName) // Используем fileName вместо file.Name()
 			if err != nil {
-				return fmt.Errorf("ошибка создания формы файла: %v", err)
+				return fmt.Errorf("ошибка создания формы файла: %w", err)
 			}
 
 			// Копируем содержимое файла в часть формы
 			if _, err := io.Copy(part, file); err != nil {
-				return fmt.Errorf("ошибка копирования файла: %v", err)
+				return fmt.Errorf("ошибка копирования файла: %w", err)
 			}
 
 			// Закрываем writer после добавления всех частей
 			if err := writer.Close(); err != nil {
-				return fmt.Errorf("ошибка закрытия writer: %v", err)
+				return fmt.Errorf("ошибка закрытия writer: %w", err)
 			}
 
 			// Создаем HTTP-запрос
 			req, err := http.NewRequest(http.MethodPost, path.Join(s.ServerURL, File, "save"), body)
 			if err != nil {
-				return fmt.Errorf("ошибка создания запроса: %v", err)
+				return fmt.Errorf("ошибка создания запроса: %w", err)
 			}
 
 			// Устанавливаем заголовки запроса
@@ -75,12 +75,7 @@ func SetSaveFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf(ErrSendRequest, err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error closing resp.Body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим здесь проверку
 
 			// Проверяем статус ответа
 			if resp.StatusCode != http.StatusOK {

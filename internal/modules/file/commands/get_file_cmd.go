@@ -39,12 +39,7 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf(ErrSendRequest, err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("Error closing response body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим проверку
 
 			if resp.StatusCode != http.StatusOK {
 				return fmt.Errorf("не удалось получить файл, статус: %v", resp.Status)

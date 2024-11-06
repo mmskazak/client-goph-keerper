@@ -12,6 +12,15 @@ import (
 
 const Pwd = "pwd"
 const Response = "Response: %s\n"
+const ErrCreateRequest = "ошибка создания запроса: %w"
+const ErrSendRequest = "ошибка отправки запроса: %w"
+const ContentType = "Content-Type"
+const Authorization = "Authorization"
+const applicationJSON = "application/json"
+const PwdID = "pwd_id"
+const Title = "title"
+const Login = "login"
+const Password = "password"
 
 // SetAllPasswordsCmd создает команду для получения всех паролей пользователя.
 func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
@@ -25,18 +34,18 @@ func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 			// Создаем запрос
 			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 			if err != nil {
-				return fmt.Errorf("ошибка создания запроса: %w", err)
+				return fmt.Errorf(ErrCreateRequest, err)
 			}
 
 			// Устанавливаем заголовки
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", s.Token)
+			req.Header.Set(ContentType, applicationJSON)
+			req.Header.Set(Authorization, s.Token)
 
 			// Отправляем запрос
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %w", err)
+				return fmt.Errorf(ErrSendRequest, err)
 			}
 			defer resp.Body.Close() //nolint:errcheck //опустим здесь проверку
 
