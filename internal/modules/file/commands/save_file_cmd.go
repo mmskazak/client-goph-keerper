@@ -21,7 +21,7 @@ func SetSaveFileCmd(s *storage.Storage) (*cobra.Command, error) {
 		Use:   "save",
 		Short: "Save a file",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			filePath, err := cmd.Flags().GetString("file")
+			filePath, err := cmd.Flags().GetString(File)
 			if err != nil {
 				return fmt.Errorf("ошибка получения пути к файлу: %w", err)
 			}
@@ -44,7 +44,7 @@ func SetSaveFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			}()
 
 			// Создаем часть формы для загружаемого файла
-			part, err := writer.CreateFormFile("file", fileName) // Используем fileName вместо file.Name()
+			part, err := writer.CreateFormFile(File, fileName) // Используем fileName вместо file.Name()
 			if err != nil {
 				return fmt.Errorf("ошибка создания формы файла: %v", err)
 			}
@@ -60,20 +60,20 @@ func SetSaveFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			// Создаем HTTP-запрос
-			req, err := http.NewRequest(http.MethodPost, path.Join(s.ServerURL, "file", "save"), body) // Используем path.Join
+			req, err := http.NewRequest(http.MethodPost, path.Join(s.ServerURL, File, "save"), body)
 			if err != nil {
 				return fmt.Errorf("ошибка создания запроса: %v", err)
 			}
 
 			// Устанавливаем заголовки запроса
 			req.Header.Set("Content-Type", writer.FormDataContentType())
-			req.Header.Set("Authorization", s.Token)
+			req.Header.Set(Authorization, s.Token)
 
 			// Отправляем запрос
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %v", err)
+				return fmt.Errorf(ErrSendRequest, err)
 			}
 			defer func(Body io.ReadCloser) {
 				err := Body.Close()
@@ -87,14 +87,14 @@ func SetSaveFileCmd(s *storage.Storage) (*cobra.Command, error) {
 				return fmt.Errorf("ошибка при сохранении файла, статус: %v", resp.Status)
 			}
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			return nil
 		},
 	}
 
 	// Добавление флага для указания файла
-	saveFileCmd.Flags().String("file", "", "Путь к файлу для сохранения")
-	err := saveFileCmd.MarkFlagRequired("file")
+	saveFileCmd.Flags().String(File, "", "Путь к файлу для сохранения")
+	err := saveFileCmd.MarkFlagRequired(File)
 	if err != nil {
 		return nil, fmt.Errorf("error mark file flag as required: %w", err)
 	}

@@ -4,7 +4,6 @@ import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"path"
 
@@ -21,7 +20,7 @@ func SetGetPasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			pwdID, _ := cmd.Flags().GetString("pwd_id")
 
 			// Формируем URL запроса
-			url := path.Join(s.ServerURL, "pwd", "get", pwdID)
+			url := path.Join(s.ServerURL, Pwd, "get", pwdID)
 
 			// Создаем запрос
 			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
@@ -38,12 +37,7 @@ func SetGetPasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error closing body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим здесь проверку
 
 			// Чтение ответа
 			data, err := io.ReadAll(resp.Body)
@@ -51,7 +45,7 @@ func SetGetPasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 				return fmt.Errorf("ошибка чтения ответа: %w", err)
 			}
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			fmt.Printf("Data: %s\n", data)
 			return nil
 		},

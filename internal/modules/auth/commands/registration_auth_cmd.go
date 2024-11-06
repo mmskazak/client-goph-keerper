@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"client-goph-keerper/internal/storage"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"path"
 
@@ -20,19 +20,19 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 		Short: "Register a new user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Получаем логин и пароль из флагов
-			username, err := cmd.Flags().GetString("username")
+			username, err := cmd.Flags().GetString(Username)
 			if err != nil {
 				return fmt.Errorf("get username: %w", err)
 			}
-			password, err := cmd.Flags().GetString("password")
+			password, err := cmd.Flags().GetString(Password)
 			if err != nil {
 				return fmt.Errorf("get password: %w", err)
 			}
 
 			// Создаем JSON объект для передачи на сервер
 			data := map[string]string{
-				"username": username,
-				"password": password,
+				Username: username,
+				Password: password,
 			}
 
 			body, err := json.Marshal(data)
@@ -42,7 +42,7 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 
 			registrationURL := path.Join(s.ServerURL, "registration")
 			// Создаём HTTP запрос для регистрации
-			req, err := http.NewRequest("POST", registrationURL, bytes.NewBuffer(body))
+			req, err := http.NewRequest(http.MethodPost, registrationURL, bytes.NewBuffer(body))
 			if err != nil {
 				return fmt.Errorf("error creating http request: %w", err)
 			}
@@ -53,12 +53,7 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("http request: %w", err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error closing body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck // опустим здесь проверку
 
 			// Читаем ответ от сервера
 			all, err := io.ReadAll(resp.Body)
@@ -67,7 +62,7 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			if resp.StatusCode != http.StatusCreated {
-				fmt.Printf("Response: %v\n", resp.Status)
+				fmt.Printf(Response, resp.Status)
 				fmt.Println(string(all))
 				return nil
 			}
@@ -80,28 +75,28 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 
 			token, ok := result["jwt"]
 			if !ok || token == "" {
-				return fmt.Errorf("токен не найден в ответе")
+				return errors.New("токен не найден в ответе")
 			}
 
 			// Сохраняем токен в базе данных
 			err = saveTokenToDB(s, token)
 			if err != nil {
-				return fmt.Errorf("ошибка сохранения токена: %v", err)
+				return fmt.Errorf("ошибка сохранения токена: %w", err)
 			}
 			fmt.Println("JWT токен:", token)
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			return nil
 		},
 	}
 
-	registerCmd.Flags().String("username", "", "Username for the new user")
-	registerCmd.Flags().String("password", "", "Password for the new user")
-	err := registerCmd.MarkFlagRequired("username")
+	registerCmd.Flags().String(Username, "", "Username for the new user")
+	registerCmd.Flags().String(Password, "", "Password for the new user")
+	err := registerCmd.MarkFlagRequired(Username)
 	if err != nil {
 		return nil, fmt.Errorf("mark username: %w", err)
 	}
-	err = registerCmd.MarkFlagRequired("password")
+	err = registerCmd.MarkFlagRequired(Password)
 	if err != nil {
 		return nil, fmt.Errorf("mark password: %w", err)
 	}

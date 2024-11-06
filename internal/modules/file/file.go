@@ -17,19 +17,19 @@ var fileCmd = &cobra.Command{
 func InitFileCmd(s *storage.Storage) (*cobra.Command, error) {
 	saveFileCmd, err := commands.SetSaveFileCmd(s)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка инициализации команды сохранения файла: %v", err)
+		return nil, fmt.Errorf("ошибка инициализации команды сохранения файла: %w", err)
 	}
 	deleteFileCmd, err := commands.SetDeleteFileCmd(s)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка инициализации команды удаления файла: %v", err)
+		return nil, fmt.Errorf("ошибка инициализации команды удаления файла: %w", err)
 	}
 	getFileCmd, err := commands.SetGetFileCmd(s)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка инициализации команды получения файла: %v", err)
+		return nil, fmt.Errorf("ошибка инициализации команды получения файла: %w", err)
 	}
 	allFilesCmd, err := commands.SetAllFilesCmd(s)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка инициализации команды получения всех файлов: %v", err)
+		return nil, fmt.Errorf("ошибка инициализации команды получения всех файлов: %w", err)
 	}
 
 	fileCmd.AddCommand(saveFileCmd)

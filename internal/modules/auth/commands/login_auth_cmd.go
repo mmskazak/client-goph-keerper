@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"path"
 
@@ -16,11 +15,13 @@ import (
 
 const Username = "username"
 const Password = "password"
+const Login = "login"
+const Response = "Response: %v\n"
 
 // LoginCommand инициализирует команду для входа пользователя.
 func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 	loginCmd := &cobra.Command{
-		Use:   "login",
+		Use:   Login,
 		Short: "Log in a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Проверяем, есть ли уже сохраненный токен
@@ -54,10 +55,10 @@ func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			// Выполняем HTTP-запрос для входа
-			loginURL := path.Join(s.ServerURL, "login")
+			loginURL := path.Join(s.ServerURL, Login)
 			req, err := http.NewRequest(http.MethodPost, loginURL, bytes.NewBuffer(body))
 			if err != nil {
-				return err
+				return fmt.Errorf("http.NewRequest: %w", err)
 			}
 
 			req.Header.Set("Content-Type", "application/json")
@@ -65,31 +66,26 @@ func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return err
+				return fmt.Errorf("client.Do: %w", err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error closing body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим тут проверку
 
 			// Читаем ответ от сервера
 			all, err := io.ReadAll(resp.Body)
 			if err != nil {
-				return err
+				return fmt.Errorf("all.ReadAll: %w", err)
 			}
 			fmt.Println(string(all))
 
 			if resp.StatusCode != http.StatusOK {
-				fmt.Printf("Response: %v\n", resp.Status)
+				fmt.Printf(Response, resp.Status)
 				return nil
 			}
 
 			// Извлекаем токен из заголовка ответа
 			token := resp.Header.Get("Authorization")
 			if token == "" {
-				return fmt.Errorf("токен не найден в заголовке")
+				return errors.New("токен не найден в заголовке")
 			}
 
 			// Сохраняем токен в базе данных
@@ -101,19 +97,19 @@ func LoginCommand(s *storage.Storage) (*cobra.Command, error) {
 			}
 			fmt.Println("JWT токен успешно сохранен:", token)
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			return nil
 		},
 	}
 
 	// Добавляем обязательные флаги login и password
-	loginCmd.Flags().String("login", "", "Login for the user")
-	loginCmd.Flags().String("password", "", "Password for the user")
-	err := loginCmd.MarkFlagRequired("login")
+	loginCmd.Flags().String(Login, "", "Login for the user")
+	loginCmd.Flags().String(Password, "", "Password for the user")
+	err := loginCmd.MarkFlagRequired(Login)
 	if err != nil {
 		return nil, fmt.Errorf("failed to mark `login` flag as required: %w", err)
 	}
-	err = loginCmd.MarkFlagRequired("password")
+	err = loginCmd.MarkFlagRequired(Password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to mark `password` flag as required: %w", err)
 	}

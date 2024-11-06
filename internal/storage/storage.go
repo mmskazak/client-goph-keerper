@@ -83,7 +83,7 @@ func (s *Storage) loadAppParams() error {
 	err := s.DataBase.QueryRow(tokenQuery).Scan(&jwt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("токен не найден в базе данных")
+			return errors.New("токен не найден в базе данных")
 		}
 		return fmt.Errorf("ошибка получения токена: %w", err)
 	}

@@ -20,21 +20,24 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 		Use:   "get",
 		Short: "Get a file by ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fileID, _ := cmd.Flags().GetString("file_id")
+			fileID, err := cmd.Flags().GetString(FileID)
+			if err != nil {
+				return fmt.Errorf("get file id: %w", err)
+			}
 
-			reqURL := path.Join(s.ServerURL, "file", "get", fileID)
+			reqURL := path.Join(s.ServerURL, File, "get", fileID)
 			req, err := http.NewRequest(http.MethodGet, reqURL, http.NoBody)
 			if err != nil {
 				return fmt.Errorf("ошибка создания запроса: %w", err)
 			}
 
 			// Используем токен из структуры storage
-			req.Header.Set("Authorization", s.Token)
+			req.Header.Set(Authorization, s.Token)
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %w", err)
+				return fmt.Errorf(ErrSendRequest, err)
 			}
 			defer func(Body io.ReadCloser) {
 				err := Body.Close()
@@ -86,8 +89,8 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 		},
 	}
 
-	getFileCmd.Flags().String("file_id", "", "File ID to retrieve")
-	err := getFileCmd.MarkFlagRequired("file_id")
+	getFileCmd.Flags().String(FileID, "", "File ID to retrieve")
+	err := getFileCmd.MarkFlagRequired(FileID)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка установки обязательного флага 'file_id': %w", err)
 	}

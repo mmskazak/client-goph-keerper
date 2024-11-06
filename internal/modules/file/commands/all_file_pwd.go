@@ -3,12 +3,17 @@ package commands
 import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
+	"path"
 
 	"github.com/spf13/cobra"
 )
+
+const File = "file"
+const Response = "Response: %v\n"
+const Authorization = "Authorization"
+const ErrSendRequest = "ошибка отправки запроса: %w"
+const FileID = "file_id"
 
 // SetAllFilesCmd создает команду для получения списка всех файлов для пользователя.
 func SetAllFilesCmd(s *storage.Storage) (*cobra.Command, error) {
@@ -16,26 +21,22 @@ func SetAllFilesCmd(s *storage.Storage) (*cobra.Command, error) {
 		Use:   "all",
 		Short: "List all files for a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/file/all", s.ServerURL), http.NoBody)
+			reqURL := path.Join(s.ServerURL, File, "all")
+			req, err := http.NewRequest(http.MethodGet, reqURL, http.NoBody)
 			if err != nil {
-				return fmt.Errorf("ошибка создания запроса: %v", err)
+				return fmt.Errorf(ErrSendRequest, err)
 			}
 
-			req.Header.Set("Authorization", s.Token)
+			req.Header.Set(Authorization, s.Token)
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %w", err)
+				return fmt.Errorf(ErrSendRequest, err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error closing response body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим здесь ошибку
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			return nil
 		},
 	}

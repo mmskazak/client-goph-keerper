@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path"
 
 	"github.com/spf13/cobra"
 )
@@ -46,11 +47,12 @@ func SetUpdatePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 
 			body, err := json.Marshal(data)
 			if err != nil {
-				return fmt.Errorf("ошибка кодирования JSON: %v", err)
+				return fmt.Errorf("ошибка кодирования JSON: %w", err)
 			}
 
 			// Создаем и отправляем запрос
-			req, err := http.NewRequest(http.MethodPost, s.ServerURL+"/pwd/update", bytes.NewBuffer(body))
+			reqURL := path.Join(s.ServerURL, Pwd, "update")
+			req, err := http.NewRequest(http.MethodPost, reqURL, bytes.NewBuffer(body))
 			if err != nil {
 				return fmt.Errorf("ошибка создания запроса: %v", err)
 			}
@@ -61,11 +63,11 @@ func SetUpdatePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %v", err)
+				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
-			defer resp.Body.Close()
+			defer resp.Body.Close() //nolint:errcheck //опустим проверку
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			return nil
 		},
 	}

@@ -4,12 +4,14 @@ import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"path"
 
 	"github.com/spf13/cobra"
 )
+
+const Pwd = "pwd"
+const Response = "Response: %s\n"
 
 // SetAllPasswordsCmd создает команду для получения всех паролей пользователя.
 func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
@@ -18,7 +20,7 @@ func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 		Short: "List all passwords for a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Формируем URL для запроса
-			url := path.Join(s.ServerURL, "pwd", "all")
+			url := path.Join(s.ServerURL, Pwd, "all")
 
 			// Создаем запрос
 			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
@@ -36,12 +38,7 @@ func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error closing response body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим здесь проверку
 
 			// Чтение тела ответа
 			responseData, err := io.ReadAll(resp.Body)
@@ -50,7 +47,7 @@ func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			fmt.Printf("Status: %v\n", resp.Status)
-			fmt.Printf("Response: %s\n", responseData)
+			fmt.Printf(Response, responseData)
 			return nil
 		},
 	}

@@ -3,8 +3,6 @@ package commands
 import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"path"
 
@@ -21,7 +19,7 @@ func SetDeletePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			pwdID, _ := cmd.Flags().GetString("pwd_id")
 
 			// Создаем URL для запроса
-			url := path.Join(s.ServerURL, "pwd", "delete", pwdID)
+			url := path.Join(s.ServerURL, Pwd, "delete", pwdID)
 			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 			if err != nil {
 				return fmt.Errorf("ошибка создания запроса: %w", err)
@@ -37,14 +35,9 @@ func SetDeletePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error closing response body: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим здесь проверку
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			return nil
 		},
 	}

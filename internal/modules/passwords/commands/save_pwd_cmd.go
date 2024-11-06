@@ -5,9 +5,8 @@ import (
 	"client-goph-keerper/internal/storage"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
+	"path"
 
 	_ "github.com/glebarez/sqlite" // Импорт драйвера SQLite
 	"github.com/spf13/cobra"
@@ -48,7 +47,8 @@ func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			}
 
 			// Создаем и отправляем запрос
-			req, err := http.NewRequest(http.MethodPost, s.ServerURL+"/pwd/save", bytes.NewBuffer(body))
+			reqURL := path.Join(s.ServerURL, Pwd, "save")
+			req, err := http.NewRequest(http.MethodPost, reqURL, bytes.NewBuffer(body))
 			if err != nil {
 				return fmt.Errorf("error saving password: %w", err)
 			}
@@ -61,14 +61,9 @@ func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("error saving password: %w", err)
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Printf("error saving password: %v", err)
-				}
-			}(resp.Body)
+			defer resp.Body.Close() //nolint:errcheck //опустим здесь проверку
 
-			fmt.Printf("Response: %v\n", resp.Status)
+			fmt.Printf(Response, resp.Status)
 			return nil
 		},
 	}
