@@ -34,7 +34,7 @@ func SetDeleteFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %v", err)
+				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
 			defer func(Body io.ReadCloser) {
 				err := Body.Close()
@@ -51,7 +51,7 @@ func SetDeleteFileCmd(s *storage.Storage) (*cobra.Command, error) {
 	deleteFileCmd.Flags().String("file_id", "", "File ID to delete")
 	err := deleteFileCmd.MarkFlagRequired("file_id")
 	if err != nil {
-		return nil, fmt.Errorf("ошибка установки обязательного флага 'file_id': %v", err)
+		return nil, fmt.Errorf("ошибка установки обязательного флага 'file_id': %w", err)
 	}
 
 	return deleteFileCmd, nil

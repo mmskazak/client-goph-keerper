@@ -4,6 +4,7 @@ import (
 	"client-goph-keerper/internal/storage"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"path"
 
@@ -22,7 +23,7 @@ func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 			// Создаем запрос
 			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 			if err != nil {
-				return fmt.Errorf("ошибка создания запроса: %v", err)
+				return fmt.Errorf("ошибка создания запроса: %w", err)
 			}
 
 			// Устанавливаем заголовки
@@ -35,7 +36,12 @@ func SetAllPasswordsCmd(s *storage.Storage) (*cobra.Command, error) {
 			if err != nil {
 				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					log.Printf("error closing response body: %v", err)
+				}
+			}(resp.Body)
 
 			// Чтение тела ответа
 			responseData, err := io.ReadAll(resp.Body)

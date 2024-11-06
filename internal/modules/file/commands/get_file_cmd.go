@@ -34,7 +34,7 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %v", err)
+				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
 			defer func(Body io.ReadCloser) {
 				err := Body.Close()
@@ -89,7 +89,7 @@ func SetGetFileCmd(s *storage.Storage) (*cobra.Command, error) {
 	getFileCmd.Flags().String("file_id", "", "File ID to retrieve")
 	err := getFileCmd.MarkFlagRequired("file_id")
 	if err != nil {
-		return nil, fmt.Errorf("ошибка установки обязательного флага 'file_id': %v", err)
+		return nil, fmt.Errorf("ошибка установки обязательного флага 'file_id': %w", err)
 	}
 
 	return getFileCmd, nil

@@ -37,7 +37,7 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 
 			body, err := json.Marshal(data)
 			if err != nil {
-				return fmt.Errorf("ошибка кодирования JSON: %v", err)
+				return fmt.Errorf("ошибка кодирования JSON: %w", err)
 			}
 
 			registrationURL := path.Join(s.ServerURL, "registration")
@@ -113,7 +113,7 @@ func RegisterCommand(s *storage.Storage) (*cobra.Command, error) {
 func saveTokenToDB(s *storage.Storage, jwt string) error {
 	insertQuery := `INSERT INTO users (jwt) VALUES (?)`
 	if _, err := s.DataBase.Exec(insertQuery, jwt); err != nil {
-		return fmt.Errorf("ошибка вставки токена в базу данных: %v", err)
+		return fmt.Errorf("ошибка вставки токена в базу данных: %w", err)
 	}
 
 	fmt.Println("Токен успешно сохранен в базу данных.")
@@ -126,7 +126,7 @@ func checkTokenExists(s *storage.Storage) (bool, error) {
 	var exists bool
 	err := s.DataBase.QueryRow(query).Scan(&exists)
 	if err != nil {
-		return false, fmt.Errorf("ошибка выполнения запроса: %v", err)
+		return false, fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
 
 	return exists, nil

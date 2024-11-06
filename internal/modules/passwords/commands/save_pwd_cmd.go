@@ -79,15 +79,15 @@ func SetSavePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 
 	err := savePwdCmd.MarkFlagRequired("title")
 	if err != nil {
-		return nil, fmt.Errorf("error setting requeired title: %v", err)
+		return nil, fmt.Errorf("error setting requeired title: %w", err)
 	}
 	err = savePwdCmd.MarkFlagRequired("login")
 	if err != nil {
-		return nil, fmt.Errorf("error setting requeired login: %v", err)
+		return nil, fmt.Errorf("error setting requeired login: %w", err)
 	}
 	err = savePwdCmd.MarkFlagRequired("password")
 	if err != nil {
-		return nil, fmt.Errorf("error setting requeired password: %v", err)
+		return nil, fmt.Errorf("error setting requeired password: %w", err)
 	}
 
 	return savePwdCmd, nil

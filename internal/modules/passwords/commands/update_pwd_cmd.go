@@ -77,19 +77,19 @@ func SetUpdatePasswordCmd(s *storage.Storage) (*cobra.Command, error) {
 
 	err := updatePwdCmd.MarkFlagRequired("pwd_id")
 	if err != nil {
-		return nil, fmt.Errorf("error setting required flag 'pwd_id': %v", err)
+		return nil, fmt.Errorf("error setting required flag 'pwd_id': %w", err)
 	}
 	err = updatePwdCmd.MarkFlagRequired("title")
 	if err != nil {
-		return nil, fmt.Errorf("error setting required flag 'title': %v", err)
+		return nil, fmt.Errorf("error setting required flag 'title': %w", err)
 	}
 	err = updatePwdCmd.MarkFlagRequired("login")
 	if err != nil {
-		return nil, fmt.Errorf("error setting required flag 'login': %v", err)
+		return nil, fmt.Errorf("error setting required flag 'login': %w", err)
 	}
 	err = updatePwdCmd.MarkFlagRequired("password")
 	if err != nil {
-		return nil, fmt.Errorf("error setting required flag 'password': %v", err)
+		return nil, fmt.Errorf("error setting required flag 'password': %w", err)
 	}
 
 	return updatePwdCmd, nil

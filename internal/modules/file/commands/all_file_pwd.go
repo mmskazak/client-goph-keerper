@@ -26,7 +26,7 @@ func SetAllFilesCmd(s *storage.Storage) (*cobra.Command, error) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				return fmt.Errorf("ошибка отправки запроса: %v", err)
+				return fmt.Errorf("ошибка отправки запроса: %w", err)
 			}
 			defer func(Body io.ReadCloser) {
 				err := Body.Close()
@@ -43,7 +43,7 @@ func SetAllFilesCmd(s *storage.Storage) (*cobra.Command, error) {
 	// Установите токен как обязательный флаг
 	err := allFilesCmd.MarkFlagRequired("token")
 	if err != nil {
-		return nil, fmt.Errorf("ошибка установки обязательного флага 'token': %v", err)
+		return nil, fmt.Errorf("ошибка установки обязательного флага 'token': %w", err)
 	}
 
 	return allFilesCmd, nil

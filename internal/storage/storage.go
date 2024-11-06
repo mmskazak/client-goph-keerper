@@ -92,7 +92,7 @@ func (s *Storage) loadAppParams() error {
 	err = s.DataBase.QueryRow(serverURLQuery).Scan(&serverURL)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("адрес сервера не найден в базе данных")
+			return fmt.Errorf("адрес сервера не найден в базе данных: %w", err)
 		}
 		return fmt.Errorf("ошибка получения адреса сервера: %w", err)
 	}
@@ -104,7 +104,7 @@ func (s *Storage) loadAppParams() error {
 	return nil
 }
 
-// RemoveTokenFromDB removeTokenFromDB удаляет токен из базы данных.
+// RemoveTokenFromDB удаляет токен из базы данных.
 func (s *Storage) RemoveTokenFromDB() error {
 	// Удаляем токен из таблицы app_params
 	deleteQuery := `DELETE FROM app_params WHERE key = ?`
